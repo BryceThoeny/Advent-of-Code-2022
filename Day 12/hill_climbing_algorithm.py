@@ -79,13 +79,10 @@ def find_path(locations, end_row, end_column, lines):
         else:
             #Add valid neighbor nodes to frontier
             neighbor_locs = node.neighbors(explored, lines, frontier)
-            for neighbor in neighbor_locs:
-                if lines[neighbor[0]][neighbor[1]] == "E":
-                    neighbor_height = 26
-                else:
-                    neighbor_height = ord(lines[neighbor[0]][neighbor[1]]) - 96
-                neighbor_node = Node(neighbor, neighbor_height, node.distance + 1)
-                frontier.add_node(neighbor_node)
+
+            [frontier.add_node(Node(neighbor, 26, (node.distance + 1))) if lines[neighbor[0]][neighbor[1]] == "E" else
+             frontier.add_node(Node(neighbor, (ord(lines[neighbor[0]][neighbor[1]]) - 96), (node.distance + 1)))
+             for neighbor in neighbor_locs]
 
             explored.append(node.location)
 
