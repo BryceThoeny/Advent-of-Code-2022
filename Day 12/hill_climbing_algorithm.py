@@ -1,3 +1,5 @@
+import timeit
+
 class Node:
 
     def __init__(self, location, height, distance):
@@ -57,10 +59,14 @@ class NodeFrontier:
         return self.frontier_list.pop(0)
 
 
-def find_path(start_row, start_column, end_row, end_column, lines):
+def find_path(locations, end_row, end_column, lines):
 
     explored = []
-    frontier = NodeFrontier([Node((start_row, start_column), 1, 0)], [(start_row, start_column)])
+    start_nodes = []
+    
+    [start_nodes.append(Node((location[0], location[1]), 1, 0)) for location in locations]
+
+    frontier = NodeFrontier(start_nodes, locations)
 
     while True:
         try:
@@ -80,23 +86,33 @@ def find_path(start_row, start_column, end_row, end_column, lines):
                     neighbor_height = ord(lines[neighbor[0]][neighbor[1]]) - 96
                 neighbor_node = Node(neighbor, neighbor_height, node.distance + 1)
                 frontier.add_node(neighbor_node)
-                
+
             explored.append(node.location)
 
 
 def part1(lines):
+
+    begin = timeit.default_timer()
+
+    locations = []
 
     for row, line in enumerate(lines):
         for column, character in enumerate(line):
             if character == "E":
                 end_row, end_column = row, column
             if character == "S":
-                start_row, start_column = row, column
+                locations.append((row, column))
 
-    print(find_path(start_row, start_column, end_row, end_column, lines))
+    print(find_path(locations, end_row, end_column, lines))
+
+    end = timeit.default_timer()
+
+    print(f"Execution time: {end - begin}")
         
 
 def part2(lines):
+
+    begin = timeit.default_timer()
 
     starts = []
 
@@ -107,16 +123,11 @@ def part2(lines):
             if character == "a":
                 starts.append((row, column))
 
-    for start in starts:
-        start_row, start_column = start[0], start[1]
-        start_dist = find_path(start_row, start_column, end_row, end_column, lines)
-        try:
-            if start_dist < min_dist:
-                min_dist = start_dist
-        except:
-            min_dist = start_dist
+    print(find_path(starts, end_row, end_column, lines))
 
-    print(min_dist)   
+    end = timeit.default_timer()
+
+    print(f"Execution time: {end - begin}")   
         
 
 def main():
