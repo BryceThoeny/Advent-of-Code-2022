@@ -84,53 +84,49 @@ def find_path(start_row, start_column, end_row, end_column, lines):
             explored.append(node.location)
 
 
-def part1():
+def part1(lines):
 
-    with open("input.txt") as file:
+    for row, line in enumerate(lines):
+        for column, character in enumerate(line):
+            if character == "E":
+                end_row, end_column = row, column
+            if character == "S":
+                start_row, start_column = row, column
 
-        lines = file.readlines()
-
-        for row, line in enumerate(lines):
-            for column, character in enumerate(line):
-                if character == "E":
-                    end_row, end_column = row, column
-                if character == "S":
-                    start_row, start_column = row, column
-
-        print(find_path(start_row, start_column, end_row, end_column, lines))
+    print(find_path(start_row, start_column, end_row, end_column, lines))
         
 
-def part2():
+def part2(lines):
 
-    with open("input.txt") as file:
+    starts = []
 
-        lines = file.readlines()
+    for row, line in enumerate(lines):
+        for column, character in enumerate(line):
+            if character == "E":
+                end_row, end_column = row, column
+            if character == "a":
+                starts.append((row, column))
 
-        starts = []
-
-        for row, line in enumerate(lines):
-            for column, character in enumerate(line):
-                if character == "E":
-                    end_row, end_column = row, column
-                if character == "a":
-                    starts.append((row, column))
-
-
-        for start in starts:
-            start_row, start_column = start[0], start[1]
-            start_dist = find_path(start_row, start_column, end_row, end_column, lines)
-            try:
-                if start_dist < min_dist:
-                    min_dist = start_dist
-            except:
+    for start in starts:
+        start_row, start_column = start[0], start[1]
+        start_dist = find_path(start_row, start_column, end_row, end_column, lines)
+        try:
+            if start_dist < min_dist:
                 min_dist = start_dist
+        except:
+            min_dist = start_dist
 
-        print(min_dist)   
+    print(min_dist)   
         
 
 def main():
-    part1()
-    part2()
+
+    with open("input.txt") as file:
+
+        lines = file.readlines()
+
+        part1(lines)
+        part2(lines)
 
 
 main()
