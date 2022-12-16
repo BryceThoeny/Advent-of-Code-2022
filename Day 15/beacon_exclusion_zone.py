@@ -118,8 +118,12 @@ def part2():
             to_point = (((sensor[0] - sensor_dist_dict.get(sensor)) - 1), sensor[1])
             to_check = to_check.union(draw(from_point, to_point, limits, sensor_beacon_dict))
 
+        count = 0
+        total = len(to_check)
         for possibility in to_check:
-
+            count += 1
+            if count % 1000000 == 0:
+                print((count / total))
             #Loop over every sensor in the set, and find the distance to the closest one
             found = True
             for sensor in sensor_dist_dict:
