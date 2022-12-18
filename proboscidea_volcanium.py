@@ -90,7 +90,11 @@ Might be OK? Need to review some time
             opener.load_move(self)
 
         while not self.move_list == [] and self.remaining > 0:
-            soonest_opener, latest_opener = self.soonest()
+            if len(self.openers) > 1:
+                soonest_opener, latest_opener = self.soonest()
+            else:
+                soonest_opener = self.openers[0]
+                latest_opener = None
             soonest_opener.execute_move(self, latest_opener)
             soonest_opener.load_move(self)
 
@@ -111,6 +115,7 @@ Might be OK? Need to review some time
             else:
                 latest_opener = opener
         return soonest_opener, latest_opener
+        
 
 
 class Opener:
@@ -127,24 +132,31 @@ class Opener:
 
     def execute_move(self, solution, other_opener):
 
+        #When executing the shortest move, if the time to complete the move is less than the remaining time
         if solution.remaining >= self.time_in_move:
-            value = self.room.valve_values(self.destination)
-
-            solution.pressure_per += value
-            solution.remaining -= self.time_in_move
+            
+            #First, increase the total pressure relieved by the current pressure per, multiplied by the time to perform the move
             solution.total_pressure += (solution.pressure_per * self.time_in_move)
+            #Then, increase pressure per by the value of the vale for the move performed.
+            solution.pressure_per += solution.valve_values(self.destination)
+            #And reduce the remaining time for both the overall problem, and for the other opener, if it exists
+            solution.remaining -= self.time_in_move
+            if other_opener:
+                other_opener.time_in_move -= self.time_in_move
 
-            other_opener.time_in_move -= self.time_in_move
-
+            #And finally, set the opener's room to the destination room
             self.room = self.destination
+        #If the time to complete the soonest move is more than the remaining time
         else:
+            #Increase the total pressure by the pressure per, multiplied by the remaining time
             solution.total_pressure += (solution.pressure_per * solution.remaining)
+            #And set the remaining time to 0
             solution.remaining = 0
 
     def load_move(self, solution):
 
         self.destination = solution.move_list.pop(-1)
-        self.time_in_move = solution.action_costs[self.room][self.destination]
+        self.time_in_move = solution.action_cost[self.room][self.destination]
 
 
 
@@ -221,7 +233,7 @@ def part1():
 
         time = 30
         start_room = "AA"
-        openers = []
+        openers = [Opener(start_room)]
         move_list = ["DD", "BB", "JJ", "HH", "EE", "CC"]
 
         #neighbor_map is going to be a dict containing each room as a key, and its neighboring rooms as values
