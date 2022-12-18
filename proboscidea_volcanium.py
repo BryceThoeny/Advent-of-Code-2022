@@ -203,27 +203,33 @@ def part1():
 
         lines = file.readlines()
 
-        #Dont need regex to find values. Can use string splits
+        valve_values = {}
+        neighbor_map = {}
+
         for line in lines:
-            valve = line.split("Valve ")[1][0:1]
+            tunnels = set()
+            valve = line.split(" ", 2)[1]
+            flow_rate = int(line.split("=")[1].split(";")[0])
+            neighbors = line.split("valve")[1].split()
+            if neighbors[0] is "s":
+                neighbors.remove("s")
+            [tunnels.add(tunnel.rstrip(",")) for tunnel in neighbors]
+            if flow_rate != 0:
+                valve_values.update({valve: flow_rate})
+            neighbor_map.update({valve: tunnels})
 
 
         time = 30
         start_room = "AA"
         openers = []
         move_list = ["DD", "BB", "JJ", "HH", "EE", "CC"]
-        valve_values = {"BB": 13, "CC": 2, "DD": 20, "EE": 3, "HH": 22, "JJ": 21}
 
-        #neighbor_map is going to be a dict of dicts
-        neighbor_map = {}
+        #neighbor_map is going to be a dict containing each room as a key, and its neighboring rooms as values
+        
         
         valid_rooms = start_room + valve_values.keys    
 
         map = Map(neighbor_map, valid_rooms)
-
-        #Still need to figure out how to get input from the file, and determine valid_rooms
-     
-        
         
 
         #iterates over every valid source room, using bfs to generate a dict of the destination rooms and their costs for the given source room
@@ -235,7 +241,7 @@ def part1():
 
         solution = Solution(move_list, time, openers, valve_values, action_cost)
 
-        print.solution.solve()
+        print(solution.solve())
 
 
 
