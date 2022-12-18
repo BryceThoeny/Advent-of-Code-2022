@@ -150,48 +150,52 @@ class Opener:
 
 class Node:
 
-    def __init__(self, room, map, path = None, cost = None):
+    def __init__(self, room, map, path):
 
         self.room = room
         self.map = map
-        
-        if path is None:
-            self.path = [self.room]
-        if cost is None:
-            self.cost = 0
-     
+        self.path = path  
 
     def __repr__(self):
 
         return f"Node {self.room}"
 
 
+class Map:
 
-def breadth_first_search(source, map, valid_rooms):
+    def __init__(self, neighbor_map, valid_rooms):
 
-    current = Node(source, map, [source])
-    frontier = [current]
+        self.neighbor_map = neighbor_map
+        self.valid_rooms = valid_rooms
+
+
+def breadth_first_search(source, map):
+   
     path_costs = {}
 
-    while True:
-        #Pop the oldest item off of the frontier
+    frontier = [Node(source, map, [source])]
+    explored = set(source)
+
+    while frontier is not []:
+
         current = frontier.pop(0)
+        #Clears out any duplicates in the frontier. Would be more efficient to avoid generating them, but this would be harder.
+        for node in frontier:
+            if node.room is current.room:
+                frontier.remove(node)
         
-        if current.room in valid_rooms:
+        if current.room in map.valid_rooms and current.room is not source:
             cost = len(current.path)
             path_costs.update({current.room: cost})
-            
-        else:
-            #If the node popped from the frontier isn't the destination, then add the neighbors to the popped node to the frontier
-            update_frontier(current.room)
-            #And add the popped node to explored
-            explored.add(current.room)
-            
-            
-            
-            
-    
+        
+        #Then add the neighbors to the popped node to the frontier
+        #And add the room we were in to the explored set
+        for room in map.neighbor_map[current.room]:
+            if room not in explored:
+                frontier.append(Node(room, map, current.path + [room]))
+        explored.add(current.room)
 
+    return path_costs
     #Returns a dict containing the destination rooms and costs for all valid rooms given the source room provided
 
 def part1():
@@ -205,21 +209,23 @@ def part1():
         move_list = ["DD", "BB", "JJ", "HH", "EE", "CC"]
         valve_values = {"BB": 13, "CC": 2, "DD": 20, "EE": 3, "HH": 22, "JJ": 21}
 
-        #map is going to be a dict of dicts
-        map = {}
+        #neighbor_map is going to be a dict of dicts
+        neighbor_map = {}
         
+        valid_rooms = start_room + valve_values.keys    
+
+        map = Map(neighbor_map, valid_rooms)
+
         #Still need to figure out how to get input from the file, and determine valid_rooms
      
-        #Iterates over all combinations of valid source and destination rooms
-        #Calls the BFS function for each one, and updates the path costs with a dict entry showing the cost to get to the keyed destination
-        #Final result is a dict of dicts, action_cost, which can be used to lookup the action cost of going from one room to another by action_cost[source][destination]
         
-        valid_rooms = start_room + valve_values.keys
+        
 
         #iterates over every valid source room, using bfs to generate a dict of the destination rooms and their costs for the given source room
+        #Final result is a dict of dicts, action_cost, which can be used to lookup the action cost of going from one room to another by action_cost[source][destination]
         action_cost = {}
-        for room in valid_rooms:
-            action_cost.update({room: breadth_first_search(room, map, valid_rooms)})
+        for room in map.valid_rooms:
+            action_cost.update({room: breadth_first_search(room, map)})
 
 
         solution = Solution(move_list, time, openers, valve_values, action_cost)
