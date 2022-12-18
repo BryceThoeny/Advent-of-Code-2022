@@ -203,6 +203,11 @@ def part1():
 
         lines = file.readlines()
 
+        #Dont need regex to find values. Can use string splits
+        for line in lines:
+            valve = line.split("Valve ")[1][0:1]
+
+
         time = 30
         start_room = "AA"
         openers = []
