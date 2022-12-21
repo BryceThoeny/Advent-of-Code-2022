@@ -56,9 +56,6 @@ class SimulatedAnnealing:
 
 class Solution:
     """
-Need to redo this to use the new action_cost thing for room/cost lookup, rather than using room objects.
-
-
 Might be OK? Need to review some time
 """
 
@@ -89,17 +86,15 @@ Might be OK? Need to review some time
         for opener in self.openers:
             opener.load_move(self)
 
-        while not self.move_list == [] and self.remaining > 0:
+        while self.remaining > 0:
             if len(self.openers) > 1:
                 soonest_opener, latest_opener = self.soonest()
             else:
                 soonest_opener = self.openers[0]
                 latest_opener = None
             soonest_opener.execute_move(self, latest_opener)
-            soonest_opener.load_move(self)
-
-        if self.remaining > 0:
-            self.total_pressure += (self.remaining * self.pressure_per)
+            if self.move_list != []:
+                soonest_opener.load_move(self)
 
         return self.total_pressure
 
@@ -116,7 +111,6 @@ Might be OK? Need to review some time
                 latest_opener = opener
         return soonest_opener, latest_opener
         
-
 
 class Opener:
 
@@ -159,13 +153,12 @@ class Opener:
         self.time_in_move = solution.action_cost[self.room][self.destination]
 
 
-
 class Node:
 
-    def __init__(self, room, map, path):
+    def __init__(self, room, room_map, path):
 
         self.room = room
-        self.map = map
+        self.room_map = room_map
         self.path = path  
 
     def __repr__(self):
@@ -173,7 +166,7 @@ class Node:
         return f"Node {self.room}"
 
 
-class Map:
+class RoomMap:
 
     def __init__(self, neighbor_map, valid_rooms):
 
@@ -181,11 +174,11 @@ class Map:
         self.valid_rooms = valid_rooms
 
 
-def breadth_first_search(source, map):
+def breadth_first_search(source, room_map):
    
     path_costs = {}
 
-    frontier = [Node(source, map, [source])]
+    frontier = [Node(source, room_map, [source])]
     explored = set(source)
 
     while frontier is not []:
@@ -196,15 +189,15 @@ def breadth_first_search(source, map):
             if node.room is current.room:
                 frontier.remove(node)
         
-        if current.room in map.valid_rooms and current.room is not source:
+        if current.room in room_map.valid_rooms and current.room is not source:
             cost = len(current.path)
             path_costs.update({current.room: cost})
         
         #Then add the neighbors to the popped node to the frontier
         #And add the room we were in to the explored set
-        for room in map.neighbor_map[current.room]:
+        for room in room_map.neighbor_map[current.room]:
             if room not in explored:
-                frontier.append(Node(room, map, current.path + [room]))
+                frontier.append(Node(room, room_map, current.path + [room]))
         explored.add(current.room)
 
     return path_costs
@@ -230,31 +223,26 @@ def part1():
                 valve_values.update({valve: flow_rate})
             neighbor_map.update({valve: tunnels})
 
-
         time = 30
         start_room = "AA"
         openers = [Opener(start_room)]
         move_list = ["DD", "BB", "JJ", "HH", "EE", "CC"]
 
         #neighbor_map is going to be a dict containing each room as a key, and its neighboring rooms as values
-        
-        
-        valid_rooms = start_room + valve_values.keys    
 
-        map = Map(neighbor_map, valid_rooms)
-        
+        valid_rooms = set(valve_values.keys()).add(start_room)    
 
+        room_map = RoomMap(neighbor_map, valid_rooms)
+        
         #iterates over every valid source room, using bfs to generate a dict of the destination rooms and their costs for the given source room
         #Final result is a dict of dicts, action_cost, which can be used to lookup the action cost of going from one room to another by action_cost[source][destination]
         action_cost = {}
-        for room in map.valid_rooms:
-            action_cost.update({room: breadth_first_search(room, map)})
-
+        for room in room_map.valid_rooms:
+            action_cost.update({room: breadth_first_search(room, room_map)})
 
         solution = Solution(move_list, time, openers, valve_values, action_cost)
 
         print(solution.solve())
-
 
 
 def main():
@@ -262,7 +250,6 @@ def main():
 
 
 main()
-
 
 #Credit for the annealing framework
 # https://towardsdatascience.com/optimization-techniques-simulated-annealing-d6a4785a1de7
