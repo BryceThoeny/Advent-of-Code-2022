@@ -177,9 +177,9 @@ class RoomMap:
 def breadth_first_search(source, room_map):
    
     path_costs = {}
+    explored = set()
 
     frontier = [Node(source, room_map, [source])]
-    explored = set(source)
 
     while frontier is not []:
 
@@ -229,8 +229,8 @@ def part1():
         move_list = ["DD", "BB", "JJ", "HH", "EE", "CC"]
 
         #neighbor_map is going to be a dict containing each room as a key, and its neighboring rooms as values
-
-        valid_rooms = set(valve_values.keys()).add(start_room)
+        valid_rooms = set(valve_values.keys())
+        valid_rooms.add(start_room)
         print(valid_rooms)    
 
         room_map = RoomMap(neighbor_map, valid_rooms)
