@@ -114,14 +114,14 @@ Might be OK? Need to review some time
 
 class Opener:
 
-    def __init__(self, room, time_in_move = 0, destination = ""):
+    def __init__(self, room, time_in_move = None, destination = None):
         
         #the room the opener in question is in
         self.room = room
         if time_in_move is None:
             self.time_in_move = 0
         if destination is None:
-            self.destination is ""
+            self.destination = ""
     
 
     def execute_move(self, solution, other_opener):
@@ -216,7 +216,7 @@ def part1():
             valve = line.split(" ", 2)[1]
             flow_rate = int(line.split("=")[1].split(";")[0])
             neighbors = line.split("valve")[1].split()
-            if neighbors[0] is "s":
+            if neighbors[0] == "s":
                 neighbors.remove("s")
             [tunnels.add(tunnel.rstrip(",")) for tunnel in neighbors]
             if flow_rate != 0:
@@ -230,7 +230,8 @@ def part1():
 
         #neighbor_map is going to be a dict containing each room as a key, and its neighboring rooms as values
 
-        valid_rooms = set(valve_values.keys()).add(start_room)    
+        valid_rooms = set(valve_values.keys()).add(start_room)
+        print(valid_rooms)    
 
         room_map = RoomMap(neighbor_map, valid_rooms)
         
