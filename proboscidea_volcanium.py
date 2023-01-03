@@ -181,13 +181,13 @@ def breadth_first_search(source, room_map):
 
     frontier = [Node(source, room_map, [source])]
 
-    while frontier is not []:
+    while len(frontier) is not 0:
 
-        current = frontier.pop(0)
-        #Clears out any duplicates in the frontier. Would be more efficient to avoid generating them, but this would be harder.
-        for node in frontier:
-            if node.room is current.room:
-                frontier.remove(node)
+        #Takes the oldest node in the frontier as the current node, proceeding if the node has not already been explored.
+        while True:
+            current = frontier.pop(0)
+            if current.room not in explored:
+                break
         
         if current.room in room_map.valid_rooms and current.room is not source:
             cost = len(current.path)
