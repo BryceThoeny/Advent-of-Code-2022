@@ -86,6 +86,8 @@ Might be OK? Need to review some time
         for opener in self.openers:
             opener.load_move(self)
 
+        starting_time = self.remaining
+
         while self.remaining > 0:
             if len(self.openers) > 1:
                 soonest_opener, latest_opener = self.soonest()
@@ -95,6 +97,8 @@ Might be OK? Need to review some time
             soonest_opener.execute_move(self, latest_opener)
             if self.move_list != []:
                 soonest_opener.load_move(self)
+            else:
+                soonest_opener.time_in_move = starting_time
 
         return self.total_pressure
 
@@ -114,15 +118,19 @@ Might be OK? Need to review some time
 
 class Opener:
 
-    def __init__(self, room, time_in_move = None, destination = None):
+    def __init__(self, room, identity, time_in_move = None, destination = None):
         
         #the room the opener in question is in
         self.room = room
+        self.identity = identity
         if time_in_move is None:
             self.time_in_move = 0
         if destination is None:
             self.destination = ""
     
+    def __repr__(self):
+
+        return f"{self.identity}"
 
     def execute_move(self, solution, other_opener):
 
@@ -132,7 +140,7 @@ class Opener:
             #First, increase the total pressure relieved by the current pressure per, multiplied by the time to perform the move
             solution.total_pressure += (solution.pressure_per * self.time_in_move)
             #Then, increase pressure per by the value of the vale for the move performed.
-            solution.pressure_per += solution.valve_values(self.destination)
+            solution.pressure_per += solution.valve_values[self.destination]
             #And reduce the remaining time for both the overall problem, and for the other opener, if it exists
             solution.remaining -= self.time_in_move
             if other_opener:
@@ -149,7 +157,7 @@ class Opener:
 
     def load_move(self, solution):
 
-        self.destination = solution.move_list.pop(-1)
+        self.destination = solution.move_list.pop(0)
         self.time_in_move = solution.action_cost[self.room][self.destination]
 
 
@@ -181,7 +189,7 @@ def breadth_first_search(source, room_map):
 
     frontier = [Node(source, room_map, [source])]
 
-    while len(frontier) is not 0:
+    while len(frontier) != 0:
 
         #Takes the oldest node in the frontier as the current node, proceeding if the node has not already been explored.
         while True:
@@ -225,7 +233,7 @@ def part1():
 
         time = 30
         start_room = "AA"
-        openers = [Opener(start_room)]
+        openers = [Opener(start_room, "Me")]
         move_list = ["DD", "BB", "JJ", "HH", "EE", "CC"]
 
         #neighbor_map is going to be a dict containing each room as a key, and its neighboring rooms as values
