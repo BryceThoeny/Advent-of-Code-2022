@@ -2,7 +2,7 @@ import math
 import random
 
 class SimulatedAnnealing:
-    def __init__(self, initial_move_list, solutionEvaluator, initialTemp, finalTemp, tempReduction, neighborOperator, iterationPerTemp=100, alpha=10, beta=5):
+    def __init__(self, initial_move_list, solutionEvaluator, initialTemp, finalTemp, tempReduction, neighborOperator, iterationPerTemp=100, alpha=1, beta=5):
         self.move_list = initial_move_list
         self.evaluate = solutionEvaluator
         self.currTemp = initialTemp
@@ -32,7 +32,7 @@ class SimulatedAnnealing:
 
     def isTerminationCriteriaMet(self):
         # can add more termination criteria
-        return self.currTemp <= self.finalTemp or self.neighborOperator(self.move_list) == 0
+        return self.currTemp <= self.finalTemp
 
     def run(self):
         while not self.isTerminationCriteriaMet():
@@ -40,23 +40,32 @@ class SimulatedAnnealing:
             for i in range(self.iterationPerTemp):
                 # get all of the neighbors
                 neighbors = self.neighborOperator(self.move_list)
-                # pick a random neighbor
+                # pick a random neighbor, and retain copies of the original move_list
                 new_move_list = random.choice(neighbors)
-                # get the cost between the two solutions
-                cost = self.evaluate(self.move_list) - self.evaluate(new_move_list)
+                original_move_list = self.move_list.copy()
+                original_new_move_list = new_move_list.copy()
+                # get the score between the two solutions
+                original_score = self.evaluate(self.move_list)
+                new_score = self.evaluate(new_move_list)
+                score = new_score - original_score
                 # if the new solution is better, accept it
-                if cost >= 0:
-                    self.move_list = new_move_list
+                if score >= 0:
+                    self.move_list = original_new_move_list
+                    print(new_score)
                 # if the new solution is not better, accept it with a probability of e^(-cost/temp)
+                elif random.uniform(0, 1) < math.exp(score / self.currTemp):
+                    self.move_list = original_new_move_list
+                    print(new_score)
+                # if it is not accepted, reset the move_list considered to the original move_list
                 else:
-                    if random.uniform(0, 1) < math.exp(-cost / self.currTemp):
-                        self.move_list = new_move_list
+                    self.move_list = original_move_list
+                    print(original_score)
             # decrement the temperature
             self.decrementRule()
 
+        return original_score
+
 class Solution:
-
-
     def __init__(self, possible_moves, remaining, openers, valve_values, action_cost, pressure_per = None, total_pressure = None, move_list = None):
 
         #contains a set of the possible moves for the problem
@@ -86,19 +95,35 @@ class Solution:
         #Second argument is the solution evaluator (the function to provide a score for the solution in question)
         #neighbor_states is a function to provide the neighboring permutations of the move set.
         
-        annealer = SimulatedAnnealing(self.move_list, self.solve, 10000, 0, "linear", self.neighbor_states)
-        annealer.run()
+        annealer = SimulatedAnnealing(self.move_list, self.solve, 1000, 0, "linear", self.neighbor_states)
+        return annealer.run()
 
-    def neighbor_states(self):
+    def neighbor_states(self, move_list):
         #Gives a list of neighboring permutations of the current move_list
-        _ = 1
+        permutations = []
+
+        for move in move_list:
+            current = move_list.index(move)
+            for swap_move in move_list:
+                swapped = move_list.copy()
+                swapped_index = move_list.index(swap_move)
+                if swapped_index > current:
+                    swapped[current], swapped[swapped_index] = swapped[swapped_index], swapped[current]
+                    permutations.append(swapped)
+
+        return permutations
+
 
     def solve(self, move_list):
 
         #Loads the first two moves prior to beginning iteration based on the time remaining
+        self.move_list = move_list
         for opener in self.openers:
-            opener.load_move(self)
+            opener.load_move(self, move_list)
 
+        self.remaining = 30
+        self.pressure_per = 0
+        self.total_pressure = 0
         starting_time = self.remaining
 
         while self.remaining > 0:
@@ -112,7 +137,9 @@ class Solution:
                 soonest_opener.load_move(self, move_list)
             else:
                 soonest_opener.time_in_move = starting_time
-
+                soonest_opener.room = "AA"
+    
+        
         return self.total_pressure
 
     def soonest(self):
@@ -250,8 +277,7 @@ def part1():
 
         #neighbor_map is going to be a dict containing each room as a key, and its neighboring rooms as values
         valid_rooms = set(valve_values.keys())
-        valid_rooms.add(start_room)
-        print(valid_rooms)    
+        valid_rooms.add(start_room)    
 
         room_map = RoomMap(neighbor_map, valid_rooms)
         
@@ -267,6 +293,7 @@ def part1():
         solution = Solution(possible_moves, time, openers, valve_values, action_cost)
 
         print(solution.anneal())
+
 
 
 def main():
