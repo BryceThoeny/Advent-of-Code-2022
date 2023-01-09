@@ -2,7 +2,7 @@ import math
 import random
 
 class SimulatedAnnealing:
-    def __init__(self, initial_move_list, solutionEvaluator, initialTemp, finalTemp, tempReduction, neighborOperator, iterationPerTemp=100, alpha=1, beta=5):
+    def __init__(self, initial_move_list, solutionEvaluator, initialTemp, finalTemp, tempReduction, neighborOperator, iterationPerTemp=100, alpha=0.99, beta=5):
         self.move_list = initial_move_list
         self.evaluate = solutionEvaluator
         self.currTemp = initialTemp
@@ -49,11 +49,13 @@ class SimulatedAnnealing:
                 new_score = self.evaluate(new_move_list)
                 score = new_score - original_score
                 # if the new solution is better, accept it
+                checker = math.exp(score / self.currTemp)
                 if score >= 0:
                     self.move_list = original_new_move_list
                     print(new_score)
                 # if the new solution is not better, accept it with a probability of e^(-cost/temp)
-                elif random.uniform(0, 1) < math.exp(score / self.currTemp):
+    
+                elif random.uniform(0, 1) < checker:
                     self.move_list = original_new_move_list
                     print(new_score)
                 # if it is not accepted, reset the move_list considered to the original move_list
@@ -95,7 +97,7 @@ class Solution:
         #Second argument is the solution evaluator (the function to provide a score for the solution in question)
         #neighbor_states is a function to provide the neighboring permutations of the move set.
         
-        annealer = SimulatedAnnealing(self.move_list, self.solve, 1000, 0, "linear", self.neighbor_states)
+        annealer = SimulatedAnnealing(self.move_list, self.solve, 1500, 0.15, "geometric", self.neighbor_states)
         return annealer.run()
 
     def neighbor_states(self, move_list):
